@@ -1,0 +1,25 @@
+# Binaries
+scheduler
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Go build artifacts
+bin/
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+go.sum

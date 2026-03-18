@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sequential-scheduler
+  namespace: kube-system
+  labels:
+    component: sequential-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: sequential-scheduler
+  template:
+    metadata:
+      labels:
+        component: sequential-scheduler
+    spec:
+      serviceAccountName: sequential-scheduler
+      containers:
+      - name: scheduler
+        image: sequential-scheduler:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /scheduler
+        - --config=/etc/kubernetes/scheduler-config.yaml
+        - --v=3
+        volumeMounts:
+        - name: scheduler-config
+          mountPath: /etc/kubernetes
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: scheduler-config
+        configMap:
+          name: sequential-scheduler-config
