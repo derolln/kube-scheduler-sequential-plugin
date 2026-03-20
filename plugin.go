@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/component-helpers/scheduling/corev1"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 )
@@ -26,20 +27,24 @@ func (s *SequentialScheduling) Less(pInfo1, pInfo2 *framework.QueuedPodInfo) boo
 	pod1 := pInfo1.Pod
 	pod2 := pInfo2.Pod
 
+	p1 := corev1.PodPriority(pod1)
+	p2 := corev1.PodPriority(pod2)
+
 	if pod1 == nil || pod2 == nil {
 		klog.ErrorS(nil, "Invalid pod info", "pod1", pod1, "pod2", pod2)
 		return false
 	}
 
-	if pod1.CreationTimestamp.Equal(&pod2.CreationTimestamp) {
+	if p1 == p2 && pod1.CreationTimestamp.Equal(&pod2.CreationTimestamp) {
 		return pod1.UID < pod2.UID
 	}
 
-	return pod1.CreationTimestamp.Before(&pod2.CreationTimestamp)
+	return (p1 > p2) || (p1 == p2 && pod1.CreationTimestamp.Before(&pod2.CreationTimestamp))
+	// original implementation : (p1 > p2) || (p1 == p2 && pInfo1.Timestamp.Before(pInfo2.Timestamp)
 }
 
 func New(_ context.Context, obj runtime.Object, h framework.Handle) (framework.Plugin, error) {
-	klog.InfoS("Creating new SequentialScheduling plugin")
+	klog.InfoS("Creating new SequentialScheduling plugin v2")
 
 	return &SequentialScheduling{
 		handle: h,

@@ -18,7 +18,8 @@ spec:
       serviceAccountName: sequential-scheduler
       containers:
       - name: scheduler
-        image: sequential-scheduler:latest
+        imagePullPolicy: Always
+        image: sequential-scheduler:v2
         imagePullPolicy: IfNotPresent
         command:
         - /scheduler

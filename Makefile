@@ -1,7 +1,7 @@
 .PHONY: build docker-build deploy clean test
 
 IMAGE_NAME ?= sequential-scheduler
-IMAGE_TAG ?= latest
+IMAGE_TAG ?= v2
 
 build:
 	go build -o scheduler .
@@ -13,6 +13,7 @@ deploy:
 	kubectl apply -f manifests/rbac.yaml
 	kubectl apply -f manifests/scheduler-config.yaml
 	kubectl apply -f manifests/deployment.yaml
+	minikube image load sequential-scheduler:$(IMAGE_TAG)
 
 undeploy:
 	kubectl delete -f manifests/deployment.yaml --ignore-not-found
