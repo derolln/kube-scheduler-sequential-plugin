@@ -1,7 +1,7 @@
 .PHONY: build docker-build deploy clean test
 
 IMAGE_NAME ?= sequential-scheduler
-IMAGE_TAG ?= v2
+IMAGE_TAG ?= v3
 
 build:
 	go build -o scheduler .
