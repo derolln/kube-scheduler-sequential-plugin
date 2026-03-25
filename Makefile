@@ -1,7 +1,7 @@
 .PHONY: build docker-build deploy clean test
 
 IMAGE_NAME ?= sequential-scheduler
-IMAGE_TAG ?= v6
+IMAGE_TAG ?= v7
 #openssl rand -hex 3 => To generate random tag
 
 build:
@@ -37,4 +37,4 @@ vet:
 	go vet ./...
 
 logs:
-	kubectl -n kube-system logs $$(kubectl get -n kube-system pod -l component=sequential-scheduler -o jsonpath='{.items[0].metadata.name}')
+	kubectl -n kube-system logs $$(kubectl get -n kube-system pod -l component=sequential-scheduler -o jsonpath='{.items[0].metadata.name}') | grep plugin

@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/component-helpers/scheduling/corev1"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
@@ -54,22 +53,37 @@ func (s *SequentialScheduling) PreFilterExtensions() framework.PreFilterExtensio
 	return nil
 }
 
+// func (s *SequentialScheduling) PreFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod) (*framework.PreFilterResult, *framework.Status) {
+// 	klog.InfoS("PreFilter function start on pod ", pod.Name)
+// 	if _, ok := pod.Annotations[AttemptedAnnotation]; ok {
+// 		klog.InfoS("Pod already attempted scheduling, proceeding", "pod", klog.KObj(pod))
+// 		return nil, framework.NewStatus(framework.Success)
+// 	}
+
+// 	patch := []byte(fmt.Sprintf(`{"metadata":{"annotations":{%q:"true"}}}`, AttemptedAnnotation))
+// 	_, err := s.handle.ClientSet().CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.MergePatchType, patch, metav1.PatchOptions{})
+// 	if err != nil {
+// 		return nil, framework.AsStatus(fmt.Errorf("failed to annotate pod %s/%s: %w", pod.Namespace, pod.Name, err))
+// 	}
+
+// 	//klog.V(4).InfoS("First scheduling attempt, sending pod to unschedulable queue", "pod", klog.KObj(pod))
+// 	klog.InfoS("First scheduling attempt, sending pod to unschedulable queue", "pod", klog.KObj(pod))
+// 	return nil, framework.NewStatus(framework.Unschedulable, "first scheduling attempt, requeueing")
+// }
+
+const minWait = 5 * time.Second
+
 func (s *SequentialScheduling) PreFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod) (*framework.PreFilterResult, *framework.Status) {
-	klog.InfoS("PreFilter function start on pod ", pod.Name)
-	if _, ok := pod.Annotations[AttemptedAnnotation]; ok {
-		klog.InfoS("Pod already attempted scheduling, proceeding", "pod", klog.KObj(pod))
+	klog.InfoS("PreFilter time function ", pod.Name)
+	age := time.Since(pod.CreationTimestamp.Time)
+	if age >= minWait {
+		klog.InfoS("PreFilter success ", pod.Name)
 		return nil, framework.NewStatus(framework.Success)
 	}
-
-	patch := []byte(fmt.Sprintf(`{"metadata":{"annotations":{%q:"true"}}}`, AttemptedAnnotation))
-	_, err := s.handle.ClientSet().CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, types.MergePatchType, patch, metav1.PatchOptions{})
-	if err != nil {
-		return nil, framework.AsStatus(fmt.Errorf("failed to annotate pod %s/%s: %w", pod.Namespace, pod.Name, err))
-	}
-
-	//klog.V(4).InfoS("First scheduling attempt, sending pod to unschedulable queue", "pod", klog.KObj(pod))
-	klog.InfoS("First scheduling attempt, sending pod to unschedulable queue", "pod", klog.KObj(pod))
-	return nil, framework.NewStatus(framework.Unschedulable, "first scheduling attempt, requeueing")
+	return nil, framework.NewStatus(
+		framework.Unschedulable,
+		fmt.Sprintf("PreFilter pod too new %s ", pod.Name),
+	)
 }
 
 func New(_ context.Context, obj runtime.Object, h framework.Handle) (framework.Plugin, error) {

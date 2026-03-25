@@ -19,7 +19,7 @@ spec:
       containers:
       - name: scheduler
         imagePullPolicy: Always
-        image: sequential-scheduler:v6
+        image: sequential-scheduler:v7
         imagePullPolicy: IfNotPresent
         command:
         - /scheduler
