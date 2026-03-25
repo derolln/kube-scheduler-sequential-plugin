@@ -45,6 +45,7 @@ func (s *SequentialScheduling) Less(pInfo1, pInfo2 *framework.QueuedPodInfo) boo
 		return pod1.UID < pod2.UID
 	}
 
+	klog.InfoS("QueueSortPlugin Less", "pod1", pod1.Name, "pod2", pod2.Name)
 	return (p1 > p2) || (p1 == p2 && pod1.CreationTimestamp.Before(&pod2.CreationTimestamp))
 	// original implementation : (p1 > p2) || (p1 == p2 && pInfo1.Timestamp.Before(pInfo2.Timestamp)
 }
@@ -54,6 +55,7 @@ func (s *SequentialScheduling) PreFilterExtensions() framework.PreFilterExtensio
 }
 
 func (s *SequentialScheduling) PreFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod) (*framework.PreFilterResult, *framework.Status) {
+	klog.InfoS("PreFilter function start on pod ", pod.Name)
 	if _, ok := pod.Annotations[AttemptedAnnotation]; ok {
 		klog.InfoS("Pod already attempted scheduling, proceeding", "pod", klog.KObj(pod))
 		return nil, framework.NewStatus(framework.Success)

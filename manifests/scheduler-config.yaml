@@ -19,3 +19,7 @@ data:
           - name: SequentialScheduling
           disabled:
           - name: "*"
+        preFilter:                                                                                                                                                                    
+          enabled:
+            - name: SequentialScheduling
+
